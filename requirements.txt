@@ -1,0 +1,8 @@
+numpy
+torch
+scikit-learn
+pandas
+sentence-transformers
+tqdm
+spacy
+nltk
