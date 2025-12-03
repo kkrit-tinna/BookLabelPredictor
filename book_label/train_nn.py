@@ -1,3 +1,5 @@
+# train_nn.py
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -10,7 +12,7 @@ from .config import (
 )
 from .data import load_arrays, get_dataloaders
 from .model import NeuralLabelPredictor
-from .metrics import precision_at_k
+from .metrics import precision_at_k, precision_at_ks
 
 
 def train_and_eval():
@@ -30,7 +32,6 @@ def train_and_eval():
         val_dataset,
         test_dataset,
     ) = get_dataloaders(X, Y)
-
 
     model = NeuralLabelPredictor(
         input_dim=input_dim,
@@ -78,22 +79,22 @@ def train_and_eval():
         avg_val_loss = running_val_loss / len(val_dataset)
 
         print(
-            f"Epoch {epoch+1}/{EPOCHS} - "
+            f"Epoch {epoch+1}/{EPOCHS} | "
             f"Train loss: {avg_train_loss:.4f} | "
             f"Val loss: {avg_val_loss:.4f}"
         )
 
-    # precision@k on val / test
-    for split_name, loader in [("Val", val_loader), ("Test", test_loader)]:
-        for k in [1, 3, 5]:
-            p_at_k = precision_at_k(model, loader, k=k, device=DEVICE)
-            print(f"{split_name} Precision@{k}: {p_at_k:.4f}")
+    # final Precision@k on val and test
+    k_list = [1, 2, 3]
 
+    print("\n Precision@k summary")
+    for split_name, loader in [("Val", val_loader), ("Test", test_loader)]:
+        p_results = precision_at_ks(model, loader, k_list=k_list, device=DEVICE)
+        for k in k_list:
+            print(f"{split_name} Precision@{k}: {p_results[k]:.4f}")
 
     model_path = "neural_label_predictor.pt"
     torch.save(model.state_dict(), model_path)
-    print("Model saved to", model_path)
-
 
 if __name__ == "__main__":
     train_and_eval()

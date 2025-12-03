@@ -6,3 +6,4 @@ sentence-transformers
 tqdm
 spacy
 nltk
+matplotlib
