@@ -1,18 +1,27 @@
-import pathlib
+# book_label/config.py
 
-BASE_DIR = pathlib.Path(__file__).resolve().parents[1]
+from pathlib import Path
 
-DATA_DIR = BASE_DIR / "data"
+# paths
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+DATA_DIR = PROJECT_ROOT / "data"
 
-EMBEDDINGS_PATH = DATA_DIR / "description_embeddings.npy"
+# core data
 LABELS_PATH = DATA_DIR / "y_multilabel.npy"
-LABEL_NAMES_PATH = DATA_DIR / "label_names.npy"
+LABEL_TO_IDX_PATH = DATA_DIR / "label_to_idx.npy"
 
-# train
-BATCH_SIZE = 128
+# embedding files
+BASELINE_DESC_PATH = DATA_DIR / "description_embeddings.npy"
+FROZEN_DESC_PATH = DATA_DIR / "frozen_description_embeddings.npy"
+UNFROZEN_DESC_PATH = DATA_DIR / "unfrozen_description_embeddings.npy"
+
+# default embedding for cosine baseline
+EMBEDDINGS_PATH = FROZEN_DESC_PATH
+
+# training config
+DEVICE = "cpu"
+HIDDEN_DIM = 512
 LR = 1e-3
 EPOCHS = 15
-HIDDEN_DIM = 256
+BATCH_SIZE = 256
 SEED = 42
-
-DEVICE = "cpu"

@@ -1,23 +1,21 @@
+# book_label/data.py
+
 import numpy as np
 import torch
-from torch.utils.data import Dataset, DataLoader
-from sklearn.model_selection import train_test_split
+from torch.utils.data import Dataset, DataLoader, random_split
 
 from .config import (
-    EMBEDDINGS_PATH,
     LABELS_PATH,
-    LABEL_NAMES_PATH,
+    FROZEN_DESC_PATH,
     BATCH_SIZE,
     SEED,
 )
 
 
-class BookDataset(Dataset):
-    def __init__(self, X: np.ndarray, Y: np.ndarray, indices: np.ndarray):
-        X_sel = X[indices]
-        Y_sel = Y[indices]
-        self.X = torch.from_numpy(X_sel).float()
-        self.Y = torch.from_numpy(Y_sel).float()
+class BooksDataset(Dataset):
+    def __init__(self, X, Y):
+        self.X = X.astype(np.float32)
+        self.Y = Y.astype(np.float32)
 
     def __len__(self):
         return self.X.shape[0]
@@ -26,58 +24,53 @@ class BookDataset(Dataset):
         return self.X[idx], self.Y[idx]
 
 
-def load_arrays():
-    X = np.load(EMBEDDINGS_PATH)           # (N, 384)
-    Y = np.load(LABELS_PATH)              # (N, L)
+def load_arrays(embedding_path=None):
+    # load arrays from npy files
+    if embedding_path is None:
+        embedding_path = FROZEN_DESC_PATH
 
-    try:
-        label_names = np.load(LABEL_NAMES_PATH, allow_pickle=True)  # (L,)
+    X = np.load(embedding_path)
+    Y = np.load(LABELS_PATH)
 
-    except FileNotFoundError:
-        num_labels = Y.shape[1]
-        label_names = np.array([f"label_{i}" for i in range(num_labels)], dtype=object)
+    assert X.shape[0] == Y.shape[0], "x and y must have same number of rows"
 
+    label_names = None
     return X, Y, label_names
 
 
-def train_val_test_split_indices(num_samples: int, seed: int = SEED):
+def get_dataloaders(X, Y, batch_size=BATCH_SIZE, val_ratio=0.1, test_ratio=0.1):
+    # build train val test data loaders
+    dataset = BooksDataset(X, Y)
+    n = len(dataset)
+
+    n_val = int(n * val_ratio)
+    n_test = int(n * test_ratio)
+    n_train = n - n_val - n_test
+
+    generator = torch.Generator().manual_seed(SEED)
+    train_ds, val_ds, test_ds = random_split(
+        dataset, [n_train, n_val, n_test], generator=generator
+    )
+
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
+    val_loader = DataLoader(val_ds, batch_size=batch_size, shuffle=False)
+    test_loader = DataLoader(test_ds, batch_size=batch_size, shuffle=False)
+
+    return train_loader, val_loader, test_loader, train_ds, val_ds, test_ds
+
+
+def train_val_test_split_indices(num_samples, val_ratio=0.1, test_ratio=0.1, seed=SEED):
+    # split indices into train val test
+    rng = np.random.RandomState(seed)
     indices = np.arange(num_samples)
+    rng.shuffle(indices)
 
-    train_idx, temp_idx = train_test_split(
-        indices,
-        test_size=0.30,
-        random_state=seed,
-        shuffle=True,
-        stratify=None,
-    )
+    n_val = int(num_samples * val_ratio)
+    n_test = int(num_samples * test_ratio)
+    n_train = num_samples - n_val - n_test
 
-    val_idx, test_idx = train_test_split(
-        temp_idx,
-        test_size=0.50,
-        random_state=seed,
-        shuffle=True,
-        stratify=None,
-    )
+    train_idx = indices[:n_train]
+    val_idx = indices[n_train:n_train + n_val]
+    test_idx = indices[n_train + n_val:]
 
     return train_idx, val_idx, test_idx
-
-
-def get_dataloaders(X: np.ndarray, Y: np.ndarray):
-    num_samples = X.shape[0]
-    train_idx, val_idx, test_idx = train_val_test_split_indices(num_samples)
-
-    train_dataset = BookDataset(X, Y, train_idx)
-    val_dataset = BookDataset(X, Y, val_idx)
-    test_dataset = BookDataset(X, Y, test_idx)
-
-    train_loader = DataLoader(
-        train_dataset, batch_size=BATCH_SIZE, shuffle=True
-    )
-    val_loader = DataLoader(
-        val_dataset, batch_size=BATCH_SIZE, shuffle=False
-    )
-    test_loader = DataLoader(
-        test_dataset, batch_size=BATCH_SIZE, shuffle=False
-    )
-
-    return train_loader, val_loader, test_loader, train_dataset, val_dataset, test_dataset

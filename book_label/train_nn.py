@@ -1,18 +1,13 @@
-# train_nn.py
+# book_label/train_nn.py
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
 
-from .config import (
-    DEVICE,
-    HIDDEN_DIM,
-    LR,
-    EPOCHS,
-)
+from .config import DEVICE, HIDDEN_DIM, LR, EPOCHS
 from .data import load_arrays, get_dataloaders
 from .model import NeuralLabelPredictor
-from .metrics import precision_at_k, precision_at_ks
+from .metrics import precision_at_ks
 
 
 def train_and_eval():
@@ -20,9 +15,9 @@ def train_and_eval():
     num_samples, input_dim = X.shape
     _, output_dim = Y.shape
 
-    print(f"X shape: {X.shape}, Y shape: {Y.shape}")
-    print(f"Num labels: {output_dim}")
-    print(f"Using device: {DEVICE}")
+    print(f"x shape: {X.shape}, y shape: {Y.shape}")
+    print(f"num labels: {output_dim}")
+    print(f"using device: {DEVICE}")
 
     (
         train_loader,
@@ -66,7 +61,6 @@ def train_and_eval():
         # val
         model.eval()
         running_val_loss = 0.0
-
         with torch.no_grad():
             for batch_X, batch_Y in val_loader:
                 batch_X = batch_X.to(DEVICE)
@@ -79,22 +73,23 @@ def train_and_eval():
         avg_val_loss = running_val_loss / len(val_dataset)
 
         print(
-            f"Epoch {epoch+1}/{EPOCHS} | "
-            f"Train loss: {avg_train_loss:.4f} | "
-            f"Val loss: {avg_val_loss:.4f}"
+            f"epoch {epoch + 1}/{EPOCHS} | "
+            f"train loss: {avg_train_loss:.4f} | "
+            f"val loss: {avg_val_loss:.4f}"
         )
 
-    # final Precision@k on val and test
+    # precision@k on val and test
     k_list = [1, 2, 3]
 
-    print("\n Precision@k summary")
-    for split_name, loader in [("Val", val_loader), ("Test", test_loader)]:
+    print("\nprecision@k summary")
+    for split_name, loader in [("val", val_loader), ("test", test_loader)]:
         p_results = precision_at_ks(model, loader, k_list=k_list, device=DEVICE)
         for k in k_list:
-            print(f"{split_name} Precision@{k}: {p_results[k]:.4f}")
+            print(f"{split_name} precision@{k}: {p_results[k]:.4f}")
 
     model_path = "neural_label_predictor.pt"
     torch.save(model.state_dict(), model_path)
+
 
 if __name__ == "__main__":
     train_and_eval()
