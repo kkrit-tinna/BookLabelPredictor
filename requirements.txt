@@ -7,3 +7,4 @@ tqdm
 spacy
 nltk
 matplotlib
+joblib
