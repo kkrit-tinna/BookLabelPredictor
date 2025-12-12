@@ -14,11 +14,12 @@ Summary of included files:
 
 --- To Run ---
 
-1. Ensure that all the above files are present in the same folder.
-2. Download the dataset from this link: https://www.kaggle.com/datasets/elvinrustam/books-dataset/code 
-3. Place the downloaded "BooksDataset.csv" file in the same folder as the code. 
-4. Open a command prompt terminal from the project's root directory
-5. In the prompt, enter: "python main.py --model "<MODEL NAME>"" where <MODEL NAME> is one of: logreg_tfidf, cosine_sbert, nn_frozen, nn_unfrozen, prototype
+1. Clone the repository from the link in the Project Report(https://github.com/kkrit-tinna/BookLabelPredictor). 
+2. Ensure that all the above files are present in the same folder.
+3. Download the dataset from this link: https://www.kaggle.com/datasets/elvinrustam/books-dataset/code 
+4. Place the downloaded "BooksDataset.csv" file in the same folder as the code. 
+5. Open a command prompt terminal from the project's root directory
+6. In the prompt, enter: "python main.py --model "<MODEL NAME>"" where <MODEL NAME> is one of: logreg_tfidf, cosine_sbert, nn_frozen, nn_unfrozen, prototype
 	a) "logreg_tfidf" runs the baseline logistic regression model. It prints to the terminal which labels it is excluding, i.e. not making predictions on because it hasn't encountered 		them in the train set, before printing evaluation metrics
 	b) "cosine_sbert" runs the direct cosine similarity comparison between generated SBERT description and label embeddings, printing metrics to the terminal
 	c) "nn_frozen" runs the neural network projection head on frozen embeddings with fixed parameters as set in runners.py, printing validation and test loss per epoch and the final 		evaluation metrics
