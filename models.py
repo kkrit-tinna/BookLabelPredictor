@@ -175,16 +175,7 @@ class CosineLabelEmbeddingModel:
             np.linalg.norm(label_embeddings, axis=1, keepdims=True) + 1e-8
         )
 
-    def fit(self, X_train, y_train=None):
-        """
-        No-op fit method for interface symmetry.
-
-        - Included so the model can plug into the same pipeline.
-        - Ignores training data since scoring is purely geometric.
-        """
-        return self
-
-    def predict_proba(self, X):
+    def predict_proba(self, X): 
         """
         Compute cosine similarity scores to label embeddings.
 
